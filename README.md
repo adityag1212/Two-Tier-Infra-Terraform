@@ -36,3 +36,25 @@ Creating a public route table that allows instances in associated subnets to sen
 
 ```Route Table Association```
 This ensures that the subnet follows the routing rules defined in that route table, allowing its instances to access the internet.
+
+### Security Groups 
+
+A Security Group acts like a virtual firewall that controls inbound (ingress) and outbound (egress) traffic.
+
+```Security Groups```
+Creates three layered security groups for a 3-tier architecture:
+```
+(1) ALB Security Group allows HTTP/HTTPS access from the internet.
+(2) Web Tier Security Group allows HTTP/HTTPS traffic only from the ALB.
+(3) Database Security Group allows MySQL access only from the Web Tier.
+```
+
+```
+Internet
+↓
+ALB
+↓
+Web Tier (EC2)
+↓
+Database (RDS)
+```

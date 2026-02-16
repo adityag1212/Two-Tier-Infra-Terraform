@@ -105,3 +105,5 @@ resource "aws_security_group" "database-sg" {
 
   depends_on = [ aws_security_group.web-tier-sg ]
 }
+
+
