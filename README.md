@@ -58,3 +58,174 @@ Web Tier (EC2)
 ↓
 Database (RDS)
 ```
+
+### RDS (Relational Database Service)
+
+This Terraform module provisions an Amazon Aurora MySQL cluster on AWS with a primary instance and a read replica for high availability and improved read scalability.
+
+```aws_db_subnet_group```
+Creates a DB subnet group using private subnets to ensure the database is deployed securely within the VPC.
+
+```aws_rds_cluster (Aurora MySQL Cluster)```
+Provisions an Amazon Aurora MySQL-compatible cluster with:
+```
+(1) Configurable database name and credentials.
+(2) Automated backups (7-day retention).
+(3) Custom backup window.
+(4) VPC security group association.
+(5) Private subnet placement.
+```
+
+```aws_rds_cluster_instance (Primary Instance)```
+Creates the main writer instance for handling application read/write traffic.
+
+```aws_rds_cluster_instance (Read Replica)```
+Creates a read replica instance to distribute read workloads and improve performance and availability.
+
+### ALB (Application Load Balancer)
+
+This Terraform module provisions a public-facing Application Load Balancer to distribute incoming web traffic across EC2 instances in the web tier.
+
+```aws_lb (Application Load Balancer)```
+Creates a public AWS Application Load Balancer deployed across two public subnets with an associated security group.
+```
+(1) Internet-facing (internal = false).
+(2) IPv4 support.
+(3) Deletion protection disabled (can be enabled for production).
+```
+```aws_lb_target_group (Web Target Group)```
+Defines a target group that routes traffic to EC2 instances on port 80.
+```
+(1) HTTP health checks enabled (/ path).
+(2) Custom health check interval and thresholds.
+(3) Attached to the specified VPC.
+```
+
+```aws_lb_listener (HTTP Listener)```
+Configures a listener on port 80 (HTTP) that forwards incoming requests to the web target group.
+
+### IAM (Identity and Access Management)
+
+This Terraform module provisions an IAM role and instance profile to securely grant permissions to EC2 instances.
+
+```aws_iam_role (IAM Role)```
+Creates an IAM role with a custom trust policy (iam-role.json) that defines which service (e.g., EC2) can assume the role.
+
+```aws_iam_role_policy (Inline Policy)```
+Attaches a custom inline policy (iam-policy.json) to the role, defining the specific AWS permissions required by the instance.
+
+```aws_iam_instance_profile (Instance Profile)```
+Creates an instance profile that allows the IAM role to be attached to EC2 instances.
+
+### Autoscaling
+
+This Terraform module provisions a scalable and self-healing web tier using an Auto Scaling Group integrated with load balancing and CloudWatch monitoring.
+
+```aws_launch_template (Launch Template)```
+Defines the EC2 configuration including:
+```
+(1) AMI ID (Amazon Machine Image)
+(2) Instance type (t2.micro)
+(3) Security group association
+(4) User data script for application deployment
+```
+
+```aws_autoscaling_group (ASG)```
+Creates an Auto Scaling Group across two public subnets with:
+```
+(1) Minimum 2 instances, maximum 4 instances
+(2) ELB health checks
+(3) Target group attachment
+(4) Instance tagging
+```
+
+```aws_autoscaling_policy (Scale-Up Policy)```
+Increases instance count by 1 when triggered.
+
+```aws_cloudwatch_metric_alarm (High CPU Alarm)```
+Triggers scale-up when CPU utilization ≥ 70%.
+
+```aws_autoscaling_policy (Scale-Down Policy)```
+Decreases instance count by 1 when triggered.
+
+```aws_cloudwatch_metric_alarm (Low CPU Alarm)```
+Triggers scale-down when CPU utilization ≤ 50%.
+
+### Route53 
+
+This Terraform module provisions a secure and globally distributed content delivery setup using CloudFront, SSL/TLS certificates, DNS records, and Web Application Firewall protection.
+
+```ACM – SSL Certificate```
+```
+aws_acm_certificate
+aws_acm_certificate_validation
+```
+Creates and validates an SSL/TLS certificate using DNS validation for the root domain and www subdomain.
+
+Service Used:
+```
+AWS Certificate Manager
+Purpose: Enables HTTPS encryption for secure communication.
+```
+
+```CloudFront – Content Delivery Network```
+```
+aws_cloudfront_distribution
+```
+Creates a CDN distribution with:
+(1) ALB as the origin.
+(2) HTTPS enforcement (redirect-to-https).
+(3) IPv6 support.
+(4) Custom domain aliases.
+(5) SSL certificate attachment.
+(6) WAF integration.
+
+Service Used:
+```
+Amazon CloudFront
+CDN – Content Delivery Network
+
+Purpose:
+(1) Global content caching
+(2) Reduced latency
+(3) Improved performance and scalability
+(4) Secure content delivery
+```
+
+```Route 53 – DNS Management```
+```
+aws_route53_record (certificate validation)
+aws_route53_record (www record)
+aws_route53_record (apex/root record)
+```
+```
+Creates DNS records for:
+(1) Certificate validation
+(2) Root domain
+(3) www subdomain
+```
+Service Used:
+```
+Amazon Route 53
+Domain Name System
+
+Purpose:
+(1) Maps domain name to CloudFront distribution.
+(2) Enables public access to application.
+```
+
+```WAF – Web Application Firewall```
+```
+aws_wafv2_web_acl
+```
+Creates a Web ACL attached to CloudFront with AWS Managed Rules to block anonymous IP sources (e.g., TOR, VPN users).
+
+Service Used:
+```
+AWS WAF
+WAF – Web Application Firewall
+
+Purpose:
+(1) Protects against malicious traffic.
+(2) Blocks anonymous IP addresses.
+(3) Enhances application security.

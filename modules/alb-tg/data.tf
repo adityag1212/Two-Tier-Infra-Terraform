@@ -16,7 +16,7 @@ data "aws_security_group" "web-alb-sg" {
   filter {
     name   = "tag:Name"
     values = [var.web-alb-sg-name]
-  }
+  }  
 }
 
 data "aws_vpc" "vpc" {

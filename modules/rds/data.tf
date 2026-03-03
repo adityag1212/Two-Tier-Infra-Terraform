@@ -17,4 +17,4 @@ data "aws_security_group" "db-sg" {
     name   = "tag:Name"
     values = [var.db-sg-name]
   }
-}
+}    
